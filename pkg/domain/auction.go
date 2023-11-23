@@ -32,7 +32,7 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 	if endDateTime.Before(*startDateTime) {
 		return nil, NewNewAuctionError("end date time must be after start date time")
 	}
-	self := &Auction{
+	return &Auction{
 		Id:            id,
 		Status:        AuctionStatusNotStarted,
 		StartDateTime: startDateTime,
@@ -41,7 +41,6 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 		StartPrice:    startPrice,
 		SellerId:      sellerId,
 	}
-	return self, nil
 }
 
 func (a *Auction) Start(onStart ...EventHandler) *Auction {
