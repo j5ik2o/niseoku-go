@@ -1,9 +1,9 @@
 package domain
 
 type UserAccount struct {
-	Id        *UserAccountId
-	FirstName string
-	LastName  string
+	id        *UserAccountId
+	firstName string
+	lastName  string
 }
 
 func NewUserAccount(id *UserAccountId, firstName string, lastName string) (*UserAccount, error) {
@@ -14,8 +14,20 @@ func NewUserAccount(id *UserAccountId, firstName string, lastName string) (*User
 		return nil, NewInvalidArgumentError("last name must not be empty")
 	}
 	return &UserAccount{
-		Id:        id,
-		FirstName: firstName,
-		LastName:  lastName,
+		id:        id,
+		firstName: firstName,
+		lastName:  lastName,
 	}, nil
+}
+
+func (u *UserAccount) GetId() *UserAccountId {
+	return u.id
+}
+
+func (u *UserAccount) GetFirstName() string {
+	return u.firstName
+}
+
+func (u *UserAccount) GetLastName() string {
+	return u.lastName
 }

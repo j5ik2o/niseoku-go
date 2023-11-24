@@ -3,7 +3,7 @@ package domain
 import "github.com/oklog/ulid/v2"
 
 type SessionId struct {
-	Value string
+	value string
 }
 
 func NewSessionId(value string) (*SessionId, error) {
@@ -11,13 +11,17 @@ func NewSessionId(value string) (*SessionId, error) {
 		return nil, NewInvalidArgumentError("session id must not be empty")
 	}
 	return &SessionId{
-		Value: value,
+		value: value,
 	}, nil
 }
 
 func GenerateSessionId() *SessionId {
 	ulid := ulid.Make()
 	return &SessionId{
-		Value: ulid.String(),
+		value: ulid.String(),
 	}
+}
+
+func (s *SessionId) String() string {
+	return s.value
 }

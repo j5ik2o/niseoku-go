@@ -3,7 +3,7 @@ package domain
 import "github.com/oklog/ulid/v2"
 
 type ProductId struct {
-	Value string
+	value string
 }
 
 func NewProductId(value string) (*ProductId, error) {
@@ -11,13 +11,17 @@ func NewProductId(value string) (*ProductId, error) {
 		return nil, NewInvalidArgumentError("product id must not be empty")
 	}
 	return &ProductId{
-		Value: value,
+		value: value,
 	}, nil
 }
 
 func GenerateProductId() *ProductId {
 	ulid := ulid.Make()
 	return &ProductId{
-		Value: ulid.String(),
+		value: ulid.String(),
 	}
+}
+
+func (p *ProductId) String() string {
+	return p.value
 }

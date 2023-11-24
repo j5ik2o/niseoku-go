@@ -12,9 +12,9 @@ func Test_ユーザアカウントを登録できる(t *testing.T) {
 	userAccount, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
 	require.NoError(t, err)
 	require.NotNil(t, userAccount)
-	require.NotNil(t, userAccount.Id)
-	require.Equal(t, "Junichi", userAccount.FirstName)
-	require.Equal(t, "Kato", userAccount.LastName)
+	require.NotNil(t, userAccount.GetId())
+	require.Equal(t, "Junichi", userAccount.GetFirstName())
+	require.Equal(t, "Kato", userAccount.GetLastName())
 	userAccountRepository := memory.NewUserAccountRepositoryInMemory()
 
 	// When
@@ -22,7 +22,7 @@ func Test_ユーザアカウントを登録できる(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	actual, err := userAccountRepository.FindById(userAccount.Id)
+	actual, err := userAccountRepository.FindById(userAccount.GetId())
 	require.NoError(t, err)
 	require.Equal(t, userAccount, actual)
 }

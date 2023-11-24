@@ -25,7 +25,7 @@ func (a *AuthenticationService) Login(userAccountId *domain.UserAccountId) (*dom
 	if userAccount == nil {
 		return nil, nil
 	}
-	session := domain.NewSession(domain.GenerateSessionId(), userAccount.Id)
+	session := domain.NewSession(domain.GenerateSessionId(), userAccount.GetId())
 	err = a.sessionRepository.Store(session)
 	return &domain.SessionWithUserAccount{Session: session, UserAccount: userAccount}, nil
 }

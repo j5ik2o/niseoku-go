@@ -1,7 +1,7 @@
 package domain
 
 type ProductPrice struct {
-	Value int
+	value int
 }
 
 func NewProductPrice(value int) (*ProductPrice, error) {
@@ -9,6 +9,10 @@ func NewProductPrice(value int) (*ProductPrice, error) {
 		return nil, NewInvalidArgumentError("product price must be greater than or equal to 0")
 	}
 	return &ProductPrice{
-		Value: value,
+		value: value,
 	}, nil
+}
+
+func (p *ProductPrice) GetValue() int {
+	return p.value
 }

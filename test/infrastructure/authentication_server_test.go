@@ -19,12 +19,12 @@ func Test_未ログインユーザがログインできる(t *testing.T) {
 	authenticationService := infrastracture.NewAuthenticationService(userAccountRepository, sessionRepository)
 
 	// When
-	login, err := authenticationService.Login(userAccount1.Id)
+	login, err := authenticationService.Login(userAccount1.GetId())
 
 	// Then
 	require.NoError(t, err)
 	require.NotNil(t, login)
-	session, err := sessionRepository.FindById(login.Session.Id)
+	session, err := sessionRepository.FindById(login.Session.GetId())
 	require.NoError(t, err)
 	require.NotNil(t, session)
 }
@@ -38,19 +38,19 @@ func Test_ログイン済みユーザがログアウトできる(t *testing.T) {
 	err = userAccountRepository.Store(userAccount1)
 	require.NoError(t, err)
 	authenticationService := infrastracture.NewAuthenticationService(userAccountRepository, sessionRepository)
-	login, err := authenticationService.Login(userAccount1.Id)
+	login, err := authenticationService.Login(userAccount1.GetId())
 	require.NoError(t, err)
 	require.NotNil(t, login)
-	session, err := sessionRepository.FindById(login.Session.Id)
+	session, err := sessionRepository.FindById(login.Session.GetId())
 	require.NoError(t, err)
 	require.NotNil(t, session)
 
 	// When
-	err = authenticationService.Logout(login.Session.Id)
+	err = authenticationService.Logout(login.Session.GetId())
 
 	// Then
 	require.NoError(t, err)
-	session, err = sessionRepository.FindById(login.Session.Id)
+	session, err = sessionRepository.FindById(login.Session.GetId())
 	require.NoError(t, err)
 	require.Nil(t, session)
 }

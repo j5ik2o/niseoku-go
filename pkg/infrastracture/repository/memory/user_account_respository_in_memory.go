@@ -13,7 +13,7 @@ func NewUserAccountRepositoryInMemory() *UserAccountRepositoryInMemory {
 }
 
 func (u *UserAccountRepositoryInMemory) Store(userAccount *domain.UserAccount) error {
-	u.storage[userAccount.Id] = userAccount
+	u.storage[userAccount.GetId()] = userAccount
 	return nil
 }
 
@@ -22,6 +22,6 @@ func (u *UserAccountRepositoryInMemory) FindById(id *domain.UserAccountId) (*dom
 }
 
 func (u *UserAccountRepositoryInMemory) Delete(userAccount *domain.UserAccount) error {
-	delete(u.storage, userAccount.Id)
+	delete(u.storage, userAccount.GetId())
 	return nil
 }

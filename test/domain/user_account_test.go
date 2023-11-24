@@ -18,7 +18,7 @@ func Test_ユーザアカウントを作成できる(t *testing.T) {
 	// Then
 	require.NoError(t, err)
 	require.NotNil(t, userAccount)
-	require.NotNil(t, userAccount.Id)
-	require.Equal(t, "Junichi", userAccount.FirstName)
-	require.Equal(t, "Kato", userAccount.LastName)
+	require.NotNil(t, userAccount.GetId())
+	require.Equal(t, "Junichi", userAccount.GetFirstName())
+	require.Equal(t, "Kato", userAccount.GetLastName())
 }

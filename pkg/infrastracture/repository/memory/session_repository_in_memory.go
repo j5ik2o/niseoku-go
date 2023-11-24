@@ -13,7 +13,7 @@ func NewSessionRepositoryInMemory() *SessionRepositoryInMemory {
 }
 
 func (s *SessionRepositoryInMemory) Store(session *domain.Session) error {
-	s.sessions[session.Id] = session
+	s.sessions[session.GetId()] = session
 	return nil
 }
 
@@ -22,6 +22,6 @@ func (s *SessionRepositoryInMemory) FindById(id *domain.SessionId) (*domain.Sess
 }
 
 func (s *SessionRepositoryInMemory) Delete(session *domain.Session) error {
-	delete(s.sessions, session.Id)
+	delete(s.sessions, session.GetId())
 	return nil
 }
