@@ -6,10 +6,13 @@ type UserAccountId struct {
 	Value string
 }
 
-func NewUserAccountId(value string) *UserAccountId {
+func NewUserAccountId(value string) (*UserAccountId, error) {
+	if value == "" {
+		return nil, NewInvalidArgumentError("user account id must not be empty")
+	}
 	return &UserAccountId{
 		Value: value,
-	}
+	}, nil
 }
 
 func GenerateUserAccountId() *UserAccountId {

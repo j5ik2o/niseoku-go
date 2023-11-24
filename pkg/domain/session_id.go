@@ -6,10 +6,13 @@ type SessionId struct {
 	Value string
 }
 
-func NewSessionId(value string) *SessionId {
+func NewSessionId(value string) (*SessionId, error) {
+	if value == "" {
+		return nil, NewInvalidArgumentError("session id must not be empty")
+	}
 	return &SessionId{
 		Value: value,
-	}
+	}, nil
 }
 
 func GenerateSessionId() *SessionId {

@@ -6,10 +6,13 @@ type AuctionId struct {
 	Value string
 }
 
-func NewAuctionId(value string) *AuctionId {
+func NewAuctionId(value string) (*AuctionId, error) {
+	if value == "" {
+		return nil, NewInvalidArgumentError("auction id must not be empty")
+	}
 	return &AuctionId{
 		Value: value,
-	}
+	}, nil
 }
 
 func GenerateAuctionId() *AuctionId {

@@ -11,8 +11,9 @@ import (
 func Test_未ログインユーザがログインできる(t *testing.T) {
 	userAccountRepository := infrastracture.NewUserAccountRepositoryInMemory()
 	sessionRepository := infrastracture.NewSessionRepositoryInMemory()
-	userAccount1 := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
-	err := userAccountRepository.Store(userAccount1)
+	userAccount1, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
+	require.NoError(t, err)
+	err = userAccountRepository.Store(userAccount1)
 	require.NoError(t, err)
 	authenticationService := infrastracture.NewAuthenticationService(userAccountRepository, sessionRepository)
 	login, err := authenticationService.Login(userAccount1.Id)
@@ -27,8 +28,9 @@ func Test_未ログインユーザがログインできる(t *testing.T) {
 func Test_ログイン済みユーザがログアウトできる(t *testing.T) {
 	userAccountRepository := infrastracture.NewUserAccountRepositoryInMemory()
 	sessionRepository := infrastracture.NewSessionRepositoryInMemory()
-	userAccount1 := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
-	err := userAccountRepository.Store(userAccount1)
+	userAccount1, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
+	require.NoError(t, err)
+	err = userAccountRepository.Store(userAccount1)
 	require.NoError(t, err)
 	authenticationService := infrastracture.NewAuthenticationService(userAccountRepository, sessionRepository)
 	login, err := authenticationService.Login(userAccount1.Id)

@@ -9,7 +9,7 @@ import (
 
 // 5) 認証売主として、商品を売りに出すために、オークションを作成したい。
 func Test_オークションを作成できる(t *testing.T) {
-	product := createProduct()
+	product := createProduct(t)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
@@ -24,7 +24,7 @@ func Test_オークションを作成できる(t *testing.T) {
 }
 
 func Test_開始時刻が過去の場合はエラーになる(t *testing.T) {
-	product := createProduct()
+	product := createProduct(t)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(-1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
@@ -35,7 +35,7 @@ func Test_開始時刻が過去の場合はエラーになる(t *testing.T) {
 }
 
 func Test_終了時刻が開始時刻より前の場合はエラーになる(t *testing.T) {
-	product := createProduct()
+	product := createProduct(t)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(-1 * time.Hour)
@@ -52,7 +52,7 @@ func Test_開始価格が0円の場合はエラーになる(t *testing.T) {
 
 // 6) オークションとして、入札を受け付けるために、開始されたい。
 func Test_オークションを開始できる(t *testing.T) {
-	product := createProduct()
+	product := createProduct(t)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
@@ -67,7 +67,7 @@ func Test_オークションを開始できる(t *testing.T) {
 // 7) 認証入札者として、最高額入札者になるために、開始されたオークションに入札したい
 func Test_オークションを最高額で入札する(t *testing.T) {
 	// Given
-	product := createProduct()
+	product := createProduct(t)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
@@ -89,10 +89,12 @@ func Test_オークションを最高額で入札する(t *testing.T) {
 	require.Equal(t, auction.HighBidPrice, highBidPrice)
 }
 
-func createProduct() *domain.Product {
+func createProduct(t *testing.T) *domain.Product {
 	productId := domain.GenerateProductId()
-	productName := domain.NewProductName("iPhone")
-	productPrice := domain.NewProductPrice(100000)
+	productName, err := domain.NewProductName("iPhone")
+	require.NoError(t, err)
+	productPrice, err := domain.NewProductPrice(100000)
+	require.NoError(t, err)
 	product := domain.NewProduct(productId, productName, productPrice)
 	return product
 }
@@ -100,8 +102,10 @@ func createProduct() *domain.Product {
 func Test_オークションは最高額より少ない額で入札できない(t *testing.T) {
 	// Given
 	productId := domain.GenerateProductId()
-	productName := domain.NewProductName("iPhone")
-	productPrice := domain.NewProductPrice(100000)
+	productName, err := domain.NewProductName("iPhone")
+	require.NoError(t, err)
+	productPrice, err := domain.NewProductPrice(100000)
+	require.NoError(t, err)
 	product := domain.NewProduct(productId, productName, productPrice)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(1 * time.Hour)

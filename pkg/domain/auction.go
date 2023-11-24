@@ -25,8 +25,14 @@ type Auction struct {
 	BuyerId       *UserAccountId
 }
 
+func auctionNewNow() *time.Time {
+	now := time.Now()
+	return &now
+}
+
 func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
-	if startDateTime.Before(time.Now()) {
+	now := auctionNewNow()
+	if startDateTime.Before(*now) {
 		return nil, NewNewAuctionError("start date time must be future")
 	}
 	if endDateTime.Before(*startDateTime) {

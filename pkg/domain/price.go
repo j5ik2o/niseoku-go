@@ -6,7 +6,7 @@ type Price struct {
 
 func NewPrice(value int) (*Price, error) {
 	if value <= 0 {
-		return nil, NewPriceError("price must be greater than 0")
+		return nil, NewInvalidArgumentError("price must be greater than 0")
 	}
 	return &Price{
 		Value: value,
