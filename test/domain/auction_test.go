@@ -191,7 +191,6 @@ func Test_オークションを終了できる_落札者が不在の場合(t *te
 	require.NoError(t, err)
 	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
-	require.NoError(t, err)
 	callback := false
 	auction = auction.Start(func(auction *domain.Auction) {
 		callback = true
