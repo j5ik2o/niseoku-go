@@ -4,14 +4,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"niseoku-go/pkg/domain"
 	"niseoku-go/pkg/infrastracture"
+	memory2 "niseoku-go/pkg/infrastracture/repository/memory"
 	"testing"
 )
 
 // 2) 登録ユーザーとして、本人確認を受けるために、ログインする
 func Test_未ログインユーザがログインできる(t *testing.T) {
 	// Given
-	userAccountRepository := infrastracture.NewUserAccountRepositoryInMemory()
-	sessionRepository := infrastracture.NewSessionRepositoryInMemory()
+	userAccountRepository := memory2.NewUserAccountRepositoryInMemory()
+	sessionRepository := memory2.NewSessionRepositoryInMemory()
 	userAccount1, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
 	require.NoError(t, err)
 	err = userAccountRepository.Store(userAccount1)
@@ -32,8 +33,8 @@ func Test_未ログインユーザがログインできる(t *testing.T) {
 // 3) 認証されたユーザーとして、サービスの利用を終えるために、ログアウトする
 func Test_ログイン済みユーザがログアウトできる(t *testing.T) {
 	// Given
-	userAccountRepository := infrastracture.NewUserAccountRepositoryInMemory()
-	sessionRepository := infrastracture.NewSessionRepositoryInMemory()
+	userAccountRepository := memory2.NewUserAccountRepositoryInMemory()
+	sessionRepository := memory2.NewSessionRepositoryInMemory()
 	userAccount1, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
 	require.NoError(t, err)
 	err = userAccountRepository.Store(userAccount1)

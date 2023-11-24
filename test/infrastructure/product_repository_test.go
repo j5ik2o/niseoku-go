@@ -3,7 +3,7 @@ package infrastructure
 import (
 	"github.com/stretchr/testify/require"
 	"niseoku-go/pkg/domain"
-	"niseoku-go/pkg/infrastracture"
+	"niseoku-go/pkg/infrastracture/repository/memory"
 	"testing"
 )
 
@@ -21,7 +21,7 @@ func Test_商品を登録できる(t *testing.T) {
 	require.Equal(t, product.Id, productId)
 	require.Equal(t, product.Name, productName)
 	require.Equal(t, product.Price, productPrice)
-	productRepository := infrastracture.NewProductRepositoryInMemory()
+	productRepository := memory.NewProductRepositoryInMemory()
 
 	// When
 	err = productRepository.Store(product)

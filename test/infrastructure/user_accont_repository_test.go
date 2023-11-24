@@ -2,7 +2,7 @@ package infrastructure
 
 import (
 	"niseoku-go/pkg/domain"
-	"niseoku-go/pkg/infrastracture"
+	"niseoku-go/pkg/infrastracture/repository/memory"
 	"testing"
 )
 import "github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func Test_ユーザアカウントが保存できる(t *testing.T) {
 	require.NotNil(t, userAccount.Id)
 	require.Equal(t, "Junichi", userAccount.FirstName)
 	require.Equal(t, "Kato", userAccount.LastName)
-	userAccountRepository := infrastracture.NewUserAccountRepositoryInMemory()
+	userAccountRepository := memory.NewUserAccountRepositoryInMemory()
 
 	// When
 	err = userAccountRepository.Store(userAccount)

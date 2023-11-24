@@ -1,13 +1,16 @@
 package infrastracture
 
-import "niseoku-go/pkg/domain"
+import (
+	"niseoku-go/pkg/domain"
+	"niseoku-go/pkg/infrastracture/repository"
+)
 
 type AuthenticationService struct {
-	userAccountRepository UserAccountRepository
-	sessionRepository     SessionRepository
+	userAccountRepository repository.UserAccountRepository
+	sessionRepository     repository.SessionRepository
 }
 
-func NewAuthenticationService(userAccountRepository UserAccountRepository, sessionRepository SessionRepository) *AuthenticationService {
+func NewAuthenticationService(userAccountRepository repository.UserAccountRepository, sessionRepository repository.SessionRepository) *AuthenticationService {
 	return &AuthenticationService{
 		userAccountRepository: userAccountRepository,
 		sessionRepository:     sessionRepository,

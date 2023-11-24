@@ -1,4 +1,4 @@
-package infrastracture
+package memory
 
 import "niseoku-go/pkg/domain"
 
