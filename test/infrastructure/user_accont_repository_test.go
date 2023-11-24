@@ -1,19 +1,11 @@
-package pkg
+package infrastructure
 
 import (
-	"nisecari-go/pkg/domain"
-	"nisecari-go/pkg/infrastracture"
+	"niseoku-go/pkg/domain"
+	"niseoku-go/pkg/infrastracture"
 	"testing"
 )
 import "github.com/stretchr/testify/require"
-
-func Test_ユーザアカウントを作成できる(t *testing.T) {
-	userAccount := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
-	require.NotNil(t, userAccount)
-	require.NotNil(t, userAccount.Id)
-	require.Equal(t, "Junichi", userAccount.FirstName)
-	require.Equal(t, "Kato", userAccount.LastName)
-}
 
 // 1) ユーザーとして、サービスを利用できるようになるために、アカウントを登録する
 func Test_ユーザアカウントが保存できる(t *testing.T) {

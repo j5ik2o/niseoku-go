@@ -1,6 +1,6 @@
 package infrastracture
 
-import "nisecari-go/pkg/domain"
+import "niseoku-go/pkg/domain"
 
 type ProductRepository interface {
 	Store(product *domain.Product) error

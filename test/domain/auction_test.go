@@ -1,8 +1,8 @@
-package pkg
+package domain
 
 import (
 	"github.com/stretchr/testify/require"
-	"nisecari-go/pkg/domain"
+	"niseoku-go/pkg/domain"
 	"testing"
 	"time"
 )

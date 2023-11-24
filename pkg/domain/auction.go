@@ -40,7 +40,7 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 		Product:       product,
 		StartPrice:    startPrice,
 		SellerId:      sellerId,
-	}
+	}, nil
 }
 
 func (a *Auction) Start(onStart ...EventHandler) *Auction {

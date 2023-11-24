@@ -1,9 +1,9 @@
-package pkg
+package infrastructure
 
 import (
 	"github.com/stretchr/testify/require"
-	"nisecari-go/pkg/domain"
-	"nisecari-go/pkg/infrastracture"
+	"niseoku-go/pkg/domain"
+	"niseoku-go/pkg/infrastracture"
 	"testing"
 )
 

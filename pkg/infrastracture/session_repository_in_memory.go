@@ -1,6 +1,6 @@
 package infrastracture
 
-import "nisecari-go/pkg/domain"
+import "niseoku-go/pkg/domain"
 
 type SessionRepositoryInMemory struct {
 	sessions map[*domain.SessionId]*domain.Session

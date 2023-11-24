@@ -1,4 +1,4 @@
-module github.com/j5ik2o/niseoku-go
+module niseoku-go
 
 go 1.20
 
@@ -6,7 +6,6 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 )
 
 require (

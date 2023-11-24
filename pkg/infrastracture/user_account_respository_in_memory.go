@@ -1,6 +1,6 @@
 package infrastracture
 
-import "nisecari-go/pkg/domain"
+import "niseoku-go/pkg/domain"
 
 type UserAccountRepositoryInMemory struct {
 	storage map[*domain.UserAccountId]*domain.UserAccount
