@@ -3,9 +3,9 @@ package domain
 type ProductType int
 
 const (
-	Generic ProductType = iota
-	DownloadSoftware
-	Car
+	ProductTypeGeneric ProductType = iota
+	ProductTypeDownloadSoftware
+	ProductTypeCar
 )
 
 type ProductStatus int
@@ -23,17 +23,18 @@ type Product struct {
 	Status      ProductStatus
 }
 
-func NewProduct(id *ProductId, name *ProductName, price *ProductPrice) *Product {
+func NewProduct(id *ProductId, productType ProductType, name *ProductName, price *ProductPrice) *Product {
 	return &Product{
-		Id:     id,
-		Name:   name,
-		Price:  price,
-		Status: ProductStatusPrivate,
+		Id:          id,
+		ProductType: productType,
+		Name:        name,
+		Price:       price,
+		Status:      ProductStatusPrivate,
 	}
 }
 
 func (p *Product) Publish() *Product {
-	result := NewProduct(p.Id, p.Name, p.Price)
+	result := NewProduct(p.Id, p.ProductType, p.Name, p.Price)
 	result.Status = ProductStatusPublic
 	return result
 }

@@ -13,6 +13,24 @@ func NewPrice(value int) (*Price, error) {
 	}, nil
 }
 
+func (p *Price) Add(other *Price) *Price {
+	return &Price{
+		Value: p.Value + other.Value,
+	}
+}
+
+func (p *Price) Subtract(other *Price) *Price {
+	return &Price{
+		Value: p.Value - other.Value,
+	}
+}
+
+func (p *Price) Multiply(rate float32) *Price {
+	return &Price{
+		Value: int(float32(p.Value) * rate),
+	}
+}
+
 func (p *Price) IsGreaterThan(other *Price) bool {
 	return p.Value > other.Value
 }

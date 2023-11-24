@@ -1,11 +1,11 @@
 package domain
 
-type NewAuctionError struct {
+type AuctionError struct {
 	BaseError
 }
 
-func NewNewAuctionError(message string) *NewAuctionError {
-	return &NewAuctionError{
+func NewAuctionError(message string) *AuctionError {
+	return &AuctionError{
 		BaseError{
 			Message: message,
 		},

@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type EventHandler func(auction *Auction)
 
@@ -33,10 +35,10 @@ func auctionNewNow() *time.Time {
 func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
 	now := auctionNewNow()
 	if startDateTime.Before(*now) {
-		return nil, NewNewAuctionError("start date time must be future")
+		return nil, NewAuctionError("start date time must be future")
 	}
 	if endDateTime.Before(*startDateTime) {
-		return nil, NewNewAuctionError("end date time must be after start date time")
+		return nil, NewAuctionError("end date time must be after start date time")
 	}
 	return &Auction{
 		Id:            id,
@@ -49,20 +51,22 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 	}, nil
 }
 
-func (a *Auction) Start(onStart ...EventHandler) *Auction {
+func (a *Auction) Start(onStart EventHandler) *Auction {
 	newAuction, _ := NewAuction(a.Id, a.Product, a.StartDateTime, a.EndDateTime, a.StartPrice, a.SellerId)
 	newAuction.Status = AuctionStatusStarted
-	for _, handler := range onStart {
-		handler(newAuction)
-	}
+	onStart(newAuction)
 	return newAuction
 }
 
-func (a *Auction) Close(onClose ...EventHandler) *Auction {
+func (a *Auction) Close(onCloseWithNoBuyer EventHandler, onCloseWithBuyer EventHandler) *Auction {
 	newAuction, _ := NewAuction(a.Id, a.Product, a.StartDateTime, a.EndDateTime, a.StartPrice, a.SellerId)
 	newAuction.Status = AuctionStatusClosed
-	for _, handler := range onClose {
-		handler(newAuction)
+	if a.HighBidderId != nil {
+		newAuction.BuyerId = a.HighBidderId
+		// newAuction.BuyerPrice = ...
+		onCloseWithBuyer(newAuction)
+	} else {
+		onCloseWithNoBuyer(newAuction)
 	}
 	return newAuction
 }
@@ -81,4 +85,50 @@ func (a *Auction) Bid(price *Price, bidderId *UserAccountId) (*Auction, error) {
 	result.HighBidPrice = price
 	result.HighBidderId = bidderId
 	return result, nil
+}
+
+func (a *Auction) GetSellerPrice() (*Price, error) {
+	if a.HighBidPrice == nil {
+		return nil, NewAuctionError("high bid price is not set")
+	}
+	hdp := float32(a.HighBidPrice.Value)
+	p, err := NewPrice(int(hdp - (hdp * 0.02)))
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+const (
+	LuxuryPriceThreshold = 50000
+	LuxuryTaxRate        = 0.04
+)
+
+func (a *Auction) GetBuyerPrice() (*Price, error) {
+	if a.HighBidPrice == nil {
+		return nil, NewAuctionError("high bid price is not set")
+	}
+	switch a.Product.ProductType {
+	case ProductTypeGeneric:
+		p, err := NewPrice(10)
+		if err != nil {
+			return nil, err
+		}
+		return a.HighBidPrice.Add(p), nil
+	case ProductTypeDownloadSoftware:
+		return a.HighBidPrice, nil
+	case ProductTypeCar:
+		p, err := NewPrice(1000)
+		if err != nil {
+			return nil, err
+		}
+		buyerPrice := a.HighBidPrice.Add(p)
+		if a.HighBidPrice.IsGreaterThanOrEqualTo(&Price{LuxuryPriceThreshold}) {
+			return buyerPrice.Add(a.HighBidPrice.Multiply(LuxuryTaxRate)), nil
+		} else {
+			return buyerPrice, nil
+		}
+	default:
+		return nil, NewAuctionError("unknown product type")
+	}
 }
