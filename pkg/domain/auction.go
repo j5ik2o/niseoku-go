@@ -71,10 +71,10 @@ func (a *Auction) Bid(price *Price, bidderId *UserAccountId) (*Auction, error) {
 	if a.Status != AuctionStatusStarted {
 		return nil, NewBidError("auction is not started")
 	}
-	if a.StartPrice.Value >= price.Value {
+	if a.StartPrice.IsGreaterThan(price) {
 		return nil, NewBidError("bid price must be higher than start price")
 	}
-	if a.HighBidPrice != nil && a.HighBidPrice.Value >= price.Value {
+	if a.HighBidPrice != nil && a.HighBidPrice.IsGreaterThanOrEqualTo(price) {
 		return nil, NewBidError("bid price must be higher than high bid price")
 	}
 	result, _ := NewAuction(a.Id, a.Product, a.StartDateTime, a.EndDateTime, a.StartPrice, a.SellerId)
