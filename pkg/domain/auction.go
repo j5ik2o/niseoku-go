@@ -25,6 +25,7 @@ type Auction struct {
 	highBidderId  *UserAccountId
 	highBidPrice  *Price
 	buyerId       *UserAccountId
+	buyerPrice    *Price
 }
 
 func (a *Auction) GetId() *AuctionId {
@@ -107,7 +108,7 @@ func (a *Auction) Close(onCloseWithNoBuyer EventHandler, onCloseWithBuyer EventH
 	newAuction.status = AuctionStatusClosed
 	if a.highBidderId != nil {
 		newAuction.buyerId = a.highBidderId
-		// newAuction.BuyerPrice = ...
+		newAuction.buyerPrice = a.highBidPrice
 		onCloseWithBuyer(newAuction)
 	} else {
 		onCloseWithNoBuyer(newAuction)
