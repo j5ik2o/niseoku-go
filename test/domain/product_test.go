@@ -20,9 +20,9 @@ func Test_商品を作成できる(t *testing.T) {
 
 	// Then
 	require.NotNil(t, product)
-	require.Equal(t, product.Id, productId)
-	require.Equal(t, product.Name, productName)
-	require.Equal(t, product.Price, productPrice)
+	require.Equal(t, product.GetId(), productId)
+	require.Equal(t, product.GetName(), productName)
+	require.Equal(t, product.GetPrice(), productPrice)
 }
 
 func Test_商品を公開できる(t *testing.T) {
@@ -40,5 +40,5 @@ func Test_商品を公開できる(t *testing.T) {
 
 	// Then
 	require.NotNil(t, product)
-	require.Equal(t, product.Status, domain.ProductStatusPublic)
+	require.Equal(t, product.GetStatus(), domain.ProductStatusPublic)
 }

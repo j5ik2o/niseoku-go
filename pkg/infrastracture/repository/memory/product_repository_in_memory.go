@@ -13,7 +13,7 @@ func NewProductRepositoryInMemory() *ProductRepositoryInMemory {
 }
 
 func (r *ProductRepositoryInMemory) Store(product *domain.Product) error {
-	r.products[product.Id] = product
+	r.products[product.GetId()] = product
 	return nil
 }
 
@@ -22,6 +22,6 @@ func (r *ProductRepositoryInMemory) FindById(productId *domain.ProductId) (*doma
 }
 
 func (r *ProductRepositoryInMemory) Delete(product *domain.Product) error {
-	delete(r.products, product.Id)
+	delete(r.products, product.GetId())
 	return nil
 }

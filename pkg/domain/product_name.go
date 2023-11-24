@@ -5,7 +5,7 @@ import (
 )
 
 type ProductName struct {
-	Value string
+	value string
 }
 
 func NewProductName(value string) (*ProductName, error) {
@@ -16,13 +16,17 @@ func NewProductName(value string) (*ProductName, error) {
 		return nil, NewInvalidArgumentError("product name must not be longer than 255 characters")
 	}
 	return &ProductName{
-		Value: value,
+		value: value,
 	}, nil
 }
 
 func GenerateProductName() *ProductName {
 	ulid := ulid.Make()
 	return &ProductName{
-		Value: ulid.String(),
+		value: ulid.String(),
 	}
+}
+
+func (p *ProductName) String() string {
+	return p.value
 }

@@ -16,25 +16,49 @@ const (
 )
 
 type Product struct {
-	Id          *ProductId
-	ProductType ProductType
-	Name        *ProductName
-	Price       *ProductPrice
-	Status      ProductStatus
+	id          *ProductId
+	productType ProductType
+	name        *ProductName
+	price       *ProductPrice
+	status      ProductStatus
 }
 
 func NewProduct(id *ProductId, productType ProductType, name *ProductName, price *ProductPrice) *Product {
 	return &Product{
-		Id:          id,
-		ProductType: productType,
-		Name:        name,
-		Price:       price,
-		Status:      ProductStatusPrivate,
+		id:          id,
+		productType: productType,
+		name:        name,
+		price:       price,
+		status:      ProductStatusPrivate,
 	}
 }
 
 func (p *Product) Publish() *Product {
-	result := NewProduct(p.Id, p.ProductType, p.Name, p.Price)
-	result.Status = ProductStatusPublic
+	result := NewProduct(p.id, p.productType, p.name, p.price)
+	result.status = ProductStatusPublic
 	return result
+}
+
+func (p *Product) GetId() *ProductId {
+	return p.id
+}
+
+func (p *Product) GetProductType() ProductType {
+	return p.productType
+}
+
+func (p *Product) GetName() *ProductName {
+	return p.name
+}
+
+func (p *Product) GetPrice() *ProductPrice {
+	return p.price
+}
+
+func (p *Product) GetStatus() ProductStatus {
+	return p.status
+}
+
+func (p *Product) IsPublic() bool {
+	return p.status == ProductStatusPublic
 }

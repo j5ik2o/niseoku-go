@@ -3,7 +3,7 @@ package domain
 import "github.com/oklog/ulid/v2"
 
 type AuctionId struct {
-	Value string
+	value string
 }
 
 func NewAuctionId(value string) (*AuctionId, error) {
@@ -11,13 +11,21 @@ func NewAuctionId(value string) (*AuctionId, error) {
 		return nil, NewInvalidArgumentError("auction id must not be empty")
 	}
 	return &AuctionId{
-		Value: value,
+		value: value,
 	}, nil
 }
 
 func GenerateAuctionId() *AuctionId {
 	ulid := ulid.Make()
 	return &AuctionId{
-		Value: ulid.String(),
+		value: ulid.String(),
 	}
+}
+
+func (a *AuctionId) String() string {
+	return a.value
+}
+
+func (a *AuctionId) Equals(other *AuctionId) bool {
+	return a.value == other.value
 }

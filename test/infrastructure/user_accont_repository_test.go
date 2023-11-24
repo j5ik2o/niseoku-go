@@ -7,8 +7,7 @@ import (
 )
 import "github.com/stretchr/testify/require"
 
-// 1) ユーザーとして、サービスを利用できるようになるために、アカウントを登録する
-func Test_ユーザアカウントが保存できる(t *testing.T) {
+func Test_ユーザアカウントを登録できる(t *testing.T) {
 	// Given
 	userAccount, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
 	require.NoError(t, err)

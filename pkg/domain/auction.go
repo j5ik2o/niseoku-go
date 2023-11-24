@@ -15,16 +15,56 @@ const (
 )
 
 type Auction struct {
-	Id            *AuctionId
-	Status        AuctionStatus
-	Product       *Product
-	StartDateTime *time.Time
-	EndDateTime   *time.Time
-	StartPrice    *Price
-	SellerId      *UserAccountId
-	HighBidderId  *UserAccountId
-	HighBidPrice  *Price
-	BuyerId       *UserAccountId
+	id            *AuctionId
+	status        AuctionStatus
+	product       *Product
+	startDateTime *time.Time
+	endDateTime   *time.Time
+	startPrice    *Price
+	sellerId      *UserAccountId
+	highBidderId  *UserAccountId
+	highBidPrice  *Price
+	buyerId       *UserAccountId
+}
+
+func (a *Auction) GetId() *AuctionId {
+	return a.id
+}
+
+func (a *Auction) GetStatus() AuctionStatus {
+	return a.status
+}
+
+func (a *Auction) GetProduct() *Product {
+	return a.product
+}
+
+func (a *Auction) GetStartDateTime() *time.Time {
+	return a.startDateTime
+}
+
+func (a *Auction) GetEndDateTime() *time.Time {
+	return a.endDateTime
+}
+
+func (a *Auction) GetStartPrice() *Price {
+	return a.startPrice
+}
+
+func (a *Auction) GetSellerId() *UserAccountId {
+	return a.sellerId
+}
+
+func (a *Auction) GetHighBidderId() *UserAccountId {
+	return a.highBidderId
+}
+
+func (a *Auction) GetHighBidPrice() *Price {
+	return a.highBidPrice
+}
+
+func (a *Auction) GetBuyerId() *UserAccountId {
+	return a.buyerId
 }
 
 func auctionNewNow() *time.Time {
@@ -41,28 +81,32 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 		return nil, NewAuctionError("end date time must be after start date time")
 	}
 	return &Auction{
-		Id:            id,
-		Status:        AuctionStatusNotStarted,
-		StartDateTime: startDateTime,
-		EndDateTime:   endDateTime,
-		Product:       product,
-		StartPrice:    startPrice,
-		SellerId:      sellerId,
+		id:            id,
+		status:        AuctionStatusNotStarted,
+		startDateTime: startDateTime,
+		endDateTime:   endDateTime,
+		product:       product,
+		startPrice:    startPrice,
+		sellerId:      sellerId,
 	}, nil
 }
 
 func (a *Auction) Start(onStart EventHandler) *Auction {
-	newAuction, _ := NewAuction(a.Id, a.Product, a.StartDateTime, a.EndDateTime, a.StartPrice, a.SellerId)
-	newAuction.Status = AuctionStatusStarted
+	newAuction, _ := a.clone()
+	newAuction.status = AuctionStatusStarted
 	onStart(newAuction)
 	return newAuction
 }
 
+func (a *Auction) clone() (*Auction, error) {
+	return NewAuction(a.id, a.product, a.startDateTime, a.endDateTime, a.startPrice, a.sellerId)
+}
+
 func (a *Auction) Close(onCloseWithNoBuyer EventHandler, onCloseWithBuyer EventHandler) *Auction {
-	newAuction, _ := NewAuction(a.Id, a.Product, a.StartDateTime, a.EndDateTime, a.StartPrice, a.SellerId)
-	newAuction.Status = AuctionStatusClosed
-	if a.HighBidderId != nil {
-		newAuction.BuyerId = a.HighBidderId
+	newAuction, _ := a.clone()
+	newAuction.status = AuctionStatusClosed
+	if a.highBidderId != nil {
+		newAuction.buyerId = a.highBidderId
 		// newAuction.BuyerPrice = ...
 		onCloseWithBuyer(newAuction)
 	} else {
@@ -72,26 +116,26 @@ func (a *Auction) Close(onCloseWithNoBuyer EventHandler, onCloseWithBuyer EventH
 }
 
 func (a *Auction) Bid(price *Price, bidderId *UserAccountId) (*Auction, error) {
-	if a.Status != AuctionStatusStarted {
+	if a.status != AuctionStatusStarted {
 		return nil, NewBidError("auction is not started")
 	}
-	if a.StartPrice.IsGreaterThan(price) {
+	if a.startPrice.IsGreaterThan(price) {
 		return nil, NewBidError("bid price must be higher than start price")
 	}
-	if a.HighBidPrice != nil && a.HighBidPrice.IsGreaterThanOrEqualTo(price) {
+	if a.highBidPrice != nil && a.highBidPrice.IsGreaterThanOrEqualTo(price) {
 		return nil, NewBidError("bid price must be higher than high bid price")
 	}
-	result, _ := NewAuction(a.Id, a.Product, a.StartDateTime, a.EndDateTime, a.StartPrice, a.SellerId)
-	result.HighBidPrice = price
-	result.HighBidderId = bidderId
+	result, _ := a.clone()
+	result.highBidPrice = price
+	result.highBidderId = bidderId
 	return result, nil
 }
 
 func (a *Auction) GetSellerPrice() (*Price, error) {
-	if a.HighBidPrice == nil {
+	if a.highBidPrice == nil {
 		return nil, NewAuctionError("high bid price is not set")
 	}
-	hdp := float32(a.HighBidPrice.Value)
+	hdp := float32(a.highBidPrice.GetValue())
 	p, err := NewPrice(int(hdp - (hdp * 0.02)))
 	if err != nil {
 		return nil, err
@@ -107,26 +151,26 @@ const (
 )
 
 func (a *Auction) GetBuyerPrice() (*Price, error) {
-	if a.HighBidPrice == nil {
+	if a.highBidPrice == nil {
 		return nil, NewAuctionError("high bid price is not set")
 	}
-	switch a.Product.ProductType {
+	switch a.product.GetProductType() {
 	case ProductTypeGeneric:
 		p, err := NewPrice(BaseShippingFee)
 		if err != nil {
 			return nil, err
 		}
-		return a.HighBidPrice.Add(p), nil
+		return a.highBidPrice.Add(p), nil
 	case ProductTypeDownloadSoftware:
-		return a.HighBidPrice, nil
+		return a.highBidPrice, nil
 	case ProductTypeCar:
 		p, err := NewPrice(CarShippingFee)
 		if err != nil {
 			return nil, err
 		}
-		buyerPrice := a.HighBidPrice.Add(p)
-		if a.HighBidPrice.IsGreaterThanOrEqualTo(&Price{LuxuryPriceThreshold}) {
-			return buyerPrice.Add(a.HighBidPrice.Multiply(LuxuryTaxRate)), nil
+		buyerPrice := a.highBidPrice.Add(p)
+		if a.highBidPrice.IsGreaterThanOrEqualTo(&Price{LuxuryPriceThreshold}) {
+			return buyerPrice.Add(a.highBidPrice.Multiply(LuxuryTaxRate)), nil
 		} else {
 			return buyerPrice, nil
 		}

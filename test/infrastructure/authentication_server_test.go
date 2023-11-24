@@ -8,7 +8,6 @@ import (
 	"testing"
 )
 
-// 2) 登録ユーザーとして、本人確認を受けるために、ログインする
 func Test_未ログインユーザがログインできる(t *testing.T) {
 	// Given
 	userAccountRepository := memory2.NewUserAccountRepositoryInMemory()
@@ -30,7 +29,6 @@ func Test_未ログインユーザがログインできる(t *testing.T) {
 	require.NotNil(t, session)
 }
 
-// 3) 認証されたユーザーとして、サービスの利用を終えるために、ログアウトする
 func Test_ログイン済みユーザがログアウトできる(t *testing.T) {
 	// Given
 	userAccountRepository := memory2.NewUserAccountRepositoryInMemory()

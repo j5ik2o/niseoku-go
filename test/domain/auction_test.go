@@ -22,10 +22,10 @@ func Test_オークションを作成できる(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, auction.Product, product)
-	require.Equal(t, auction.SellerId, sellerId)
-	require.Equal(t, auction.StartDateTime, &startDateTime)
-	require.Equal(t, auction.StartPrice, startPrice)
+	require.Equal(t, auction.GetProduct(), product)
+	require.Equal(t, auction.GetSellerId(), sellerId)
+	require.Equal(t, auction.GetStartDateTime(), &startDateTime)
+	require.Equal(t, auction.GetStartPrice(), startPrice)
 }
 
 func Test_開始時刻が過去の場合はエラーになる(t *testing.T) {
@@ -116,8 +116,8 @@ func Test_オークションを最高額で入札する(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, auction.HighBidderId, buyerId)
-	require.Equal(t, auction.HighBidPrice, highBidPrice)
+	require.Equal(t, auction.GetHighBidderId(), buyerId)
+	require.Equal(t, auction.GetHighBidPrice(), highBidPrice)
 }
 
 func Test_オークションは最高額より少ない額で入札できない(t *testing.T) {
@@ -144,8 +144,8 @@ func Test_オークションは最高額より少ない額で入札できない(
 
 	// Then
 	require.Error(t, err)
-	require.Nil(t, auction.HighBidderId)
-	require.Nil(t, auction.HighBidPrice)
+	require.Nil(t, auction.GetHighBidderId())
+	require.Nil(t, auction.GetHighBidPrice())
 }
 
 // 8) オークションとして、最高入札者や売手に通知できるようになるために、閉じられたい。
@@ -174,7 +174,7 @@ func Test_オークションを終了できる_落札者が存在する場合(t 
 	auction.Close(func(auction *domain.Auction) {
 		actualBuyerId = nil
 	}, func(auction *domain.Auction) {
-		actualBuyerId = auction.BuyerId
+		actualBuyerId = auction.GetBuyerId()
 	})
 
 	// Then
@@ -202,7 +202,7 @@ func Test_オークションを終了できる_落札者が不在の場合(t *te
 	auction.Close(func(auction *domain.Auction) {
 		actualBuyerId = nil
 	}, func(auction *domain.Auction) {
-		actualBuyerId = auction.BuyerId
+		actualBuyerId = auction.GetBuyerId()
 	})
 
 	// Then
@@ -267,7 +267,7 @@ func Test_落札者の購入価格を取得する_一般商品(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, highBidPrice.Add(&domain.Price{Value: 10}), buyerPrice)
+	require.Equal(t, highBidPrice.Add(domain.NewPriceFromInt(10)), buyerPrice)
 }
 
 func Test_落札者の購入価格を取得する_ダウンロードソフトウェア(t *testing.T) {
@@ -323,7 +323,7 @@ func Test_落札者の購入価格を取得する_自動車(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, highBidPrice.Add(&domain.Price{Value: 1000}), buyerPrice)
+	require.Equal(t, highBidPrice.Add(domain.NewPriceFromInt(1000)), buyerPrice)
 }
 
 func Test_落札者の購入価格を取得する_自動車2(t *testing.T) {
@@ -351,7 +351,7 @@ func Test_落札者の購入価格を取得する_自動車2(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, highBidPrice.Add(&domain.Price{Value: 1000}).Add(highBidPrice.Multiply(0.04)), buyerPrice)
+	require.Equal(t, highBidPrice.Add(domain.NewPriceFromInt(1000)).Add(highBidPrice.Multiply(0.04)), buyerPrice)
 }
 
 func createProduct(t *testing.T, productType domain.ProductType) *domain.Product {

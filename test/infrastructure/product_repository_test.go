@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-// 4) 認証されたユーザーとして、商品を出品するために、商品を登録する
 func Test_商品を登録できる(t *testing.T) {
 	// Given
 	productId := domain.GenerateProductId()
@@ -18,9 +17,9 @@ func Test_商品を登録できる(t *testing.T) {
 	require.NoError(t, err)
 	product := domain.NewProduct(productId, productType, productName, productPrice)
 	require.NotNil(t, product)
-	require.Equal(t, product.Id, productId)
-	require.Equal(t, product.Name, productName)
-	require.Equal(t, product.Price, productPrice)
+	require.Equal(t, product.GetId(), productId)
+	require.Equal(t, product.GetName(), productName)
+	require.Equal(t, product.GetPrice(), productPrice)
 	productRepository := memory.NewProductRepositoryInMemory()
 
 	// When
@@ -28,7 +27,7 @@ func Test_商品を登録できる(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	actual, err := productRepository.FindById(product.Id)
+	actual, err := productRepository.FindById(product.GetId())
 	require.NoError(t, err)
 	require.Equal(t, product, actual)
 }

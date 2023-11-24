@@ -3,7 +3,7 @@ package domain
 import "github.com/oklog/ulid/v2"
 
 type UserAccountId struct {
-	Value string
+	value string
 }
 
 func NewUserAccountId(value string) (*UserAccountId, error) {
@@ -11,17 +11,21 @@ func NewUserAccountId(value string) (*UserAccountId, error) {
 		return nil, NewInvalidArgumentError("user account id must not be empty")
 	}
 	return &UserAccountId{
-		Value: value,
+		value: value,
 	}, nil
 }
 
 func GenerateUserAccountId() *UserAccountId {
 	ulid := ulid.Make()
 	return &UserAccountId{
-		Value: ulid.String(),
+		value: ulid.String(),
 	}
 }
 
 func (u *UserAccountId) Equals(other *UserAccountId) bool {
-	return u.Value == other.Value
+	return u.value == other.value
+}
+
+func (u *UserAccountId) String() string {
+	return u.value
 }
