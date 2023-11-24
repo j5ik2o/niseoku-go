@@ -7,7 +7,15 @@ import (
 )
 
 func Test_ユーザアカウントを作成できる(t *testing.T) {
-	userAccount, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
+	// Given
+	userAccountId := domain.GenerateUserAccountId()
+	firstName := "Junichi"
+	lastName := "Kato"
+
+	// When
+	userAccount, err := domain.NewUserAccount(userAccountId, firstName, lastName)
+
+	// Then
 	require.NoError(t, err)
 	require.NotNil(t, userAccount)
 	require.NotNil(t, userAccount.Id)

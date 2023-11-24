@@ -9,6 +9,7 @@ import "github.com/stretchr/testify/require"
 
 // 1) ユーザーとして、サービスを利用できるようになるために、アカウントを登録する
 func Test_ユーザアカウントが保存できる(t *testing.T) {
+	// Given
 	userAccount, err := domain.NewUserAccount(domain.GenerateUserAccountId(), "Junichi", "Kato")
 	require.NoError(t, err)
 	require.NotNil(t, userAccount)
@@ -16,7 +17,11 @@ func Test_ユーザアカウントが保存できる(t *testing.T) {
 	require.Equal(t, "Junichi", userAccount.FirstName)
 	require.Equal(t, "Kato", userAccount.LastName)
 	userAccountRepository := infrastracture.NewUserAccountRepositoryInMemory()
+
+	// When
 	err = userAccountRepository.Store(userAccount)
+
+	// Then
 	require.NoError(t, err)
 	actual, err := userAccountRepository.FindById(userAccount.Id)
 	require.NoError(t, err)

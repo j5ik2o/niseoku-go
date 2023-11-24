@@ -100,6 +100,8 @@ func (a *Auction) GetSellerPrice() (*Price, error) {
 }
 
 const (
+	BaseShippingFee      = 10
+	CarShippingFee       = 1000
 	LuxuryPriceThreshold = 50000
 	LuxuryTaxRate        = 0.04
 )
@@ -110,7 +112,7 @@ func (a *Auction) GetBuyerPrice() (*Price, error) {
 	}
 	switch a.Product.ProductType {
 	case ProductTypeGeneric:
-		p, err := NewPrice(10)
+		p, err := NewPrice(BaseShippingFee)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +120,7 @@ func (a *Auction) GetBuyerPrice() (*Price, error) {
 	case ProductTypeDownloadSoftware:
 		return a.HighBidPrice, nil
 	case ProductTypeCar:
-		p, err := NewPrice(1000)
+		p, err := NewPrice(CarShippingFee)
 		if err != nil {
 			return nil, err
 		}

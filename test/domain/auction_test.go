@@ -16,8 +16,10 @@ func Test_オークションを作成できる(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
+
 	// When
 	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+
 	// Then
 	require.NoError(t, err)
 	require.Equal(t, auction.Product, product)
@@ -34,8 +36,10 @@ func Test_開始時刻が過去の場合はエラーになる(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
+
 	// When
 	_, err = domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+
 	// Then
 	require.Error(t, err)
 }
@@ -48,8 +52,10 @@ func Test_終了時刻が開始時刻より前の場合はエラーになる(t *
 	endDateTime := startDateTime.Add(-1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
+
 	// When
 	_, err = domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+
 	// Then
 	require.Error(t, err)
 }
@@ -57,12 +63,14 @@ func Test_終了時刻が開始時刻より前の場合はエラーになる(t *
 func Test_開始価格が0円の場合はエラーになる(t *testing.T) {
 	// Given, When
 	_, err := domain.NewPrice(0)
+
 	// Then
 	require.Error(t, err)
 }
 
 // 6) オークションとして、入札を受け付けるために、開始されたい。
 func Test_オークションを開始できる(t *testing.T) {
+	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
 	startDateTime := time.Now().Add(1 * time.Hour)
@@ -72,9 +80,13 @@ func Test_オークションを開始できる(t *testing.T) {
 	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	callback := false
+
+	// When
 	auction = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+
+	// Then
 	require.True(t, callback)
 	require.NotNil(t, auction)
 }
@@ -156,11 +168,11 @@ func Test_オークションを終了できる_落札者が存在する場合(t 
 	})
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
+	var actualBuyerId *domain.UserAccountId
 
 	// When
-	var actualBuyerId *domain.UserAccountId
 	auction.Close(func(auction *domain.Auction) {
-		actualBuyerId = auction.BuyerId
+		actualBuyerId = nil
 	}, func(auction *domain.Auction) {
 		actualBuyerId = auction.BuyerId
 	})
@@ -185,11 +197,11 @@ func Test_オークションを終了できる_落札者が不在の場合(t *te
 		callback = true
 	})
 	require.True(t, callback)
+	var actualBuyerId *domain.UserAccountId
 
 	// When
-	var actualBuyerId *domain.UserAccountId
 	auction.Close(func(auction *domain.Auction) {
-		actualBuyerId = auction.BuyerId
+		actualBuyerId = nil
 	}, func(auction *domain.Auction) {
 		actualBuyerId = auction.BuyerId
 	})
@@ -225,9 +237,9 @@ func Test_出品者の販売価格を取得する_2パーセントの手数料�
 
 	// When
 	sellerPrice, err := auction.GetSellerPrice()
-	require.NoError(t, err)
 
 	// Then
+	require.NoError(t, err)
 	require.Equal(t, highBidPrice.Multiply(1-0.02), sellerPrice)
 }
 
