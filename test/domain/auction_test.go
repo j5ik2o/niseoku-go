@@ -16,16 +16,29 @@ func Test_CreateAuction(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
+	auctionId := domain.GenerateAuctionId()
 
 	// When
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 
 	// Then
 	require.NoError(t, err)
+	require.NotNil(t, auction)
+	require.Equal(t, auction.GetId(), auctionId)
 	require.Equal(t, auction.GetProduct(), product)
 	require.Equal(t, auction.GetSellerId(), sellerId)
 	require.Equal(t, auction.GetStartDateTime(), &startDateTime)
 	require.Equal(t, auction.GetStartPrice(), startPrice)
+	require.Equal(t, auction.GetEndDateTime(), &endDateTime)
+	require.Nil(t, auction.GetHighBidderId())
+	require.Nil(t, auction.GetHighBidPrice())
+	require.Nil(t, auction.GetBuyerId())
+	sellerPrice, err := auction.GetSellerPrice()
+	require.Error(t, err)
+	require.Nil(t, sellerPrice)
+	buyerPrice, err := auction.GetBuyerPrice()
+	require.Error(t, err)
+	require.Nil(t, buyerPrice)
 }
 
 // 開始時刻が過去の場合は、オークションは作成できない
@@ -37,12 +50,21 @@ func Test_CantCreateAuctionIfStartTimeLessThanNow(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
+	auctionId := domain.GenerateAuctionId()
 
 	// When
-	_, err = domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	_, err = domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 
 	// Then
 	require.Error(t, err)
+}
+
+type MockClock struct {
+	now *time.Time
+}
+
+func (c *MockClock) Now() *time.Time {
+	return c.now
 }
 
 // 終了時刻が開始時刻より過去の場合は、オークションは作成できない
@@ -54,9 +76,10 @@ func Test_CantCreateAuctionIfEndTimeLessThanStartTime(t *testing.T) {
 	endDateTime := startDateTime.Add(-1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
+	auctionId := domain.GenerateAuctionId()
 
 	// When
-	_, err = domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	_, err = domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 
 	// Then
 	require.Error(t, err)
@@ -67,22 +90,69 @@ func Test_StartAuction(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := time.Now().Add(3 * time.Second)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	callback := false
+	setClock(startDateTime, auction)
 
 	// When
-	auction = auction.Start(func(auction *domain.Auction) {
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
 
 	// Then
+	require.NoError(t, err)
 	require.True(t, callback)
 	require.NotNil(t, auction)
+}
+
+// 開始時刻前にオークションを開始できない
+func Test_CantStartAuctionBeforeStartTime(t *testing.T) {
+	// Given
+	product := createProduct(t, domain.ProductTypeGeneric)
+	sellerId := domain.GenerateUserAccountId()
+	startDateTime := time.Now().Add(3 * time.Second)
+	endDateTime := startDateTime.Add(1 * time.Hour)
+	startPrice, err := domain.NewPrice(1000)
+	require.NoError(t, err)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	require.NoError(t, err)
+	setClock(startDateTime.Add(-30*time.Second), auction)
+
+	// When
+	auction, err = auction.Start(func(auction *domain.Auction) {
+	})
+
+	// Then
+	require.Error(t, err)
+	require.Nil(t, auction)
+}
+
+// オークションが開始していない場合は、入札できない
+func Test_CantBidBeforeStartTime(t *testing.T) {
+	// Given
+	product := createProduct(t, domain.ProductTypeGeneric)
+	sellerId := domain.GenerateUserAccountId()
+	startDateTime := time.Now().Add(1 * time.Hour)
+	endDateTime := startDateTime.Add(1 * time.Hour)
+	startPrice, err := domain.NewPrice(1000)
+	require.NoError(t, err)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	require.NoError(t, err)
+	setClock(startDateTime, auction)
+
+	// When
+	_, err = auction.Bid(startPrice, domain.GenerateUserAccountId())
+
+	// Then
+	require.Error(t, err)
 }
 
 // 最高額にてオークションに入札する
@@ -94,15 +164,18 @@ func Test_BidHighestAmountInAuction(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 
 	// When
@@ -114,6 +187,13 @@ func Test_BidHighestAmountInAuction(t *testing.T) {
 	require.Equal(t, auction.GetHighBidPrice(), highBidPrice)
 }
 
+func setClock(startDateTime time.Time, auction *domain.Auction) {
+	mockClock := MockClock{
+		now: &startDateTime,
+	}
+	auction.SetClock(&mockClock)
+}
+
 // 最高額より少ない価格では入札できない
 func Test_CantBidWithMinimumAmountLessThanHighestAmount(t *testing.T) {
 	// Given
@@ -123,15 +203,18 @@ func Test_CantBidWithMinimumAmountLessThanHighestAmount(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(10)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 
 	// When
@@ -152,15 +235,18 @@ func Test_AuctionCanBeClosed_WhenThereAreWinningBidders(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
 	var actualBuyerId *domain.UserAccountId
@@ -185,12 +271,15 @@ func Test_AuctionCannotBeClosed_WhenThereAreNoWinningBidders(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	var actualBuyerId *domain.UserAccountId
 
@@ -220,15 +309,18 @@ func Test_GetSellingPrice_With2PercentCommissionDeducted(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
 
@@ -249,15 +341,18 @@ func Test_GetSellingPrice_WithRegularItem(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
 
@@ -278,15 +373,18 @@ func Test_GetSellingPrice_WithDownloadableSoftware(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
 
@@ -307,15 +405,18 @@ func Test_GetSellingPrice_WithCar(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
 
@@ -336,15 +437,18 @@ func Test_GetSellingPrice_WithCarOver50K(t *testing.T) {
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
-	auction, err := domain.NewAuction(domain.GenerateAuctionId(), product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auctionId := domain.GenerateAuctionId()
+	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(50000)
 	require.NoError(t, err)
 	callback := false
-	auction = auction.Start(func(auction *domain.Auction) {
+	setClock(startDateTime, auction)
+	auction, err = auction.Start(func(auction *domain.Auction) {
 		callback = true
 	})
+	require.NoError(t, err)
 	require.True(t, callback)
 	auction, err = auction.Bid(highBidPrice, buyerId)
 

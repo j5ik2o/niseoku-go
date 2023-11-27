@@ -43,6 +43,22 @@ type Auction struct {
 	highBidPrice  *Price
 	buyerId       *UserAccountId
 	buyerPrice    *Price
+	clock         Clock
+}
+
+type Clock interface {
+	Now() *time.Time
+}
+
+type SystemClock struct{}
+
+func (c *SystemClock) Now() *time.Time {
+	now := time.Now()
+	return &now
+}
+
+func (a *Auction) SetClock(clock Clock) {
+	a.clock = clock
 }
 
 func (a *Auction) GetId() *AuctionId {
@@ -85,12 +101,6 @@ func (a *Auction) GetBuyerId() *UserAccountId {
 	return a.buyerId
 }
 
-// auctionNewNow は現在時刻を取得する関数
-func auctionNewNow() *time.Time {
-	now := time.Now()
-	return &now
-}
-
 // clone はオークション集約を複製する関数
 func (a *Auction) clone() (*Auction, error) {
 	return NewAuction(a.id, a.product, a.startDateTime, a.endDateTime, a.startPrice, a.sellerId)
@@ -115,8 +125,8 @@ func (a *Auction) clone() (*Auction, error) {
 // - Auction オークション集約
 // - エラー
 func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
-	now := auctionNewNow()
-	if startDateTime.Before(*now) {
+	now := time.Now()
+	if startDateTime.Before(now) {
 		return nil, NewAuctionError("start date time must be future")
 	}
 	if endDateTime.Before(*startDateTime) {
@@ -130,6 +140,7 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 		product:       product,
 		startPrice:    startPrice,
 		sellerId:      sellerId,
+		clock:         &SystemClock{},
 	}, nil
 }
 
@@ -143,11 +154,17 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 //
 // # 戻り値
 // - オークション集約
-func (a *Auction) Start(onStart EventHandler) *Auction {
+func (a *Auction) Start(onStart EventHandler) (*Auction, error) {
+	if a.status != AuctionStatusNotStarted {
+		return nil, NewAuctionError("auction is not not started")
+	}
+	if a.startDateTime.After(*a.clock.Now()) {
+		return nil, NewAuctionError("auction start date time is not after now")
+	}
 	newAuction, _ := a.clone()
 	newAuction.status = AuctionStatusStarted
 	onStart(newAuction)
-	return newAuction
+	return newAuction, nil
 }
 
 // Close はオークションを終了する関数
