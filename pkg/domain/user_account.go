@@ -5,6 +5,7 @@ type UserAccount struct {
 	id        *UserAccountId
 	firstName string
 	lastName  string
+	password  string
 }
 
 // NewUserAccount はユーザーアカウントを生成します。
@@ -35,4 +36,16 @@ func (u *UserAccount) GetFirstName() string {
 // GetLastName はユーザーアカウントの姓を返します。
 func (u *UserAccount) GetLastName() string {
 	return u.lastName
+}
+
+func (u *UserAccount) IsPasswordCorrect(password string) bool {
+	return u.password == password
+}
+
+func (u *UserAccount) GetFullName() string {
+	return u.firstName + " " + u.lastName
+}
+
+func (u *UserAccount) GetPassword() string {
+	return u.password
 }

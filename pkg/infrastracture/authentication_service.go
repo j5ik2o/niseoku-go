@@ -32,7 +32,7 @@ func NewAuthenticationService(userAccountRepository repository.UserAccountReposi
 // # 戻り値
 // - domain.SessionWithUserAccount
 // - エラー
-func (a *AuthenticationService) Login(userAccountId *domain.UserAccountId) (*domain.SessionWithUserAccount, error) {
+func (a *AuthenticationService) Login(userAccountId *domain.UserAccountId, password string) (*domain.SessionWithUserAccount, error) {
 	userAccount, err := a.userAccountRepository.FindById(userAccountId)
 	if err != nil {
 		return nil, err
@@ -42,6 +42,9 @@ func (a *AuthenticationService) Login(userAccountId *domain.UserAccountId) (*dom
 	}
 	if a.sessionRepository.ContainsByUserAccountId(userAccountId) {
 		return nil, fmt.Errorf("user account (%s) is not logged in", userAccountId.String())
+	}
+	if !userAccount.IsPasswordCorrect(password) {
+		return nil, fmt.Errorf("password is wrong")
 	}
 	session := domain.NewSession(domain.GenerateSessionId(), userAccount.GetId())
 	err = a.sessionRepository.Store(session)

@@ -21,6 +21,15 @@ func (u *UserAccountRepositoryInMemory) FindById(id *domain.UserAccountId) (*dom
 	return u.storage[id], nil
 }
 
+func (u *UserAccountRepositoryInMemory) FindByFullName(fullName string) (*domain.UserAccount, error) {
+	for _, userAccount := range u.storage {
+		if userAccount.GetFullName() == fullName {
+			return userAccount, nil
+		}
+	}
+	return nil, nil
+}
+
 func (u *UserAccountRepositoryInMemory) Delete(userAccount *domain.UserAccount) error {
 	delete(u.storage, userAccount.GetId())
 	return nil
