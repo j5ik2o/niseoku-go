@@ -87,7 +87,7 @@ func Test_StartAuction(t *testing.T) {
 	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := clock.Now().Add(3 * time.Second)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
