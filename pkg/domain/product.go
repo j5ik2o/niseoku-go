@@ -34,6 +34,9 @@ func NewProduct(id *ProductId, productType ProductType, name *ProductName, price
 }
 
 func (p *Product) Publish() *Product {
+	if p.status == ProductStatusPublic {
+		return p
+	}
 	result := NewProduct(p.id, p.productType, p.name, p.price)
 	result.status = ProductStatusPublic
 	return result

@@ -2,6 +2,7 @@ package domain
 
 import "github.com/oklog/ulid/v2"
 
+// AuctionId はオークションのIDを表します。
 type AuctionId struct {
 	value string
 }

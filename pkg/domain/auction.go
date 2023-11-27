@@ -4,8 +4,10 @@ import (
 	"time"
 )
 
+// EventHandler はイベントハンドラを表します。
 type EventHandler func(auction *Auction)
 
+// AuctionStatus はオークションの状態を表します。
 type AuctionStatus int
 
 const (
@@ -14,6 +16,14 @@ const (
 	AuctionStatusClosed
 )
 
+const (
+	BaseShippingFee      = 10
+	CarShippingFee       = 1000
+	LuxuryPriceThreshold = 50000
+	LuxuryTaxRate        = 0.04
+)
+
+// Auction はオークション集約を表します。
 type Auction struct {
 	id            *AuctionId
 	status        AuctionStatus
@@ -68,11 +78,35 @@ func (a *Auction) GetBuyerId() *UserAccountId {
 	return a.buyerId
 }
 
+// auctionNewNow は現在時刻を取得する関数
 func auctionNewNow() *time.Time {
 	now := time.Now()
 	return &now
 }
 
+// clone はオークション集約を複製する関数
+func (a *Auction) clone() (*Auction, error) {
+	return NewAuction(a.id, a.product, a.startDateTime, a.endDateTime, a.startPrice, a.sellerId)
+}
+
+// NewAuction はオークション集約を生成する関数
+//
+// オークション集約を生成する際には、以下のルールに従う必要がある
+// - 開始日時は未来であること
+// - 終了日時は開始日時より後であること
+// - 開始価格は0より大きいこと
+//
+// # 引数
+// - id: オークションID
+// - product: 商品
+// - startDateTime: 開始日時
+// - endDateTime: 終了日時
+// - startPrice: 開始価格
+// - sellerId: 出品者ID
+//
+// # 戻り値
+// - Auction オークション集約
+// - エラー
 func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
 	now := auctionNewNow()
 	if startDateTime.Before(*now) {
@@ -92,6 +126,16 @@ func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDa
 	}, nil
 }
 
+// Start はオークションを開始する関数
+//
+// オークションを開始する際には、以下のルールに従う必要がある
+// - オークションは開始前であること
+//
+// # 引数
+// - onStart: オークション開始時のイベントハンドラ
+//
+// # 戻り値
+// - オークション集約
 func (a *Auction) Start(onStart EventHandler) *Auction {
 	newAuction, _ := a.clone()
 	newAuction.status = AuctionStatusStarted
@@ -99,10 +143,17 @@ func (a *Auction) Start(onStart EventHandler) *Auction {
 	return newAuction
 }
 
-func (a *Auction) clone() (*Auction, error) {
-	return NewAuction(a.id, a.product, a.startDateTime, a.endDateTime, a.startPrice, a.sellerId)
-}
-
+// Close はオークションを終了する関数
+//
+// オークションを終了する際には、以下のルールに従う必要がある
+// - オークションは開始済みであること
+//
+// # 引数
+// - onCloseWithNoBuyer: 落札者がいなかった場合のイベントハンドラ
+// - onCloseWithBuyer: 落札者がいた場合のイベントハンドラ
+//
+// # 戻り値
+// - Auction オークション集約
 func (a *Auction) Close(onCloseWithNoBuyer EventHandler, onCloseWithBuyer EventHandler) *Auction {
 	newAuction, _ := a.clone()
 	newAuction.status = AuctionStatusClosed
@@ -116,6 +167,20 @@ func (a *Auction) Close(onCloseWithNoBuyer EventHandler, onCloseWithBuyer EventH
 	return newAuction
 }
 
+// Bid は入札する関数
+//
+// 入札する際には、以下のルールに従う必要がある
+// - オークションは開始済みであること
+// - 入札価格は開始価格より高いこと
+// - 入札価格は現在の最高入札価格より高いこと
+//
+// # 引数
+// - price: 入札価格
+// - bidderId: 入札者ID
+//
+// # 戻り値
+// - Auction オークション集約
+// - エラー
 func (a *Auction) Bid(price *Price, bidderId *UserAccountId) (*Auction, error) {
 	if a.status != AuctionStatusStarted {
 		return nil, NewBidError("auction is not started")
@@ -132,6 +197,43 @@ func (a *Auction) Bid(price *Price, bidderId *UserAccountId) (*Auction, error) {
 	return result, nil
 }
 
+// CancelBid は入札をキャンセルする関数
+//
+// 入札をキャンセルする際には、以下のルールに従う必要がある
+// - オークションは開始済みであること
+// - 入札者は最高入札者であること
+//
+// # 引数
+// - bidderId: 入札者ID
+//
+// # 戻り値
+// - Auction オークション集約
+// - エラー
+func (a *Auction) CancelBid(bidderId *UserAccountId) (*Auction, error) {
+	if a.status != AuctionStatusStarted {
+		return nil, NewBidError("auction is not started")
+	}
+	if a.highBidderId == nil {
+		return nil, NewBidError("high bidder is not set")
+	}
+	if !a.highBidderId.Equals(bidderId) {
+		return nil, NewBidError("bidder is not high bidder")
+	}
+	result, _ := a.clone()
+	result.highBidPrice = nil
+	result.highBidderId = nil
+	return result, nil
+}
+
+// GetSellerPrice は出品者が受け取る金額を取得する関数
+//
+// 出品者が受け取る金額を取得する際には、以下のルールに従う必要がある
+// - オークションは終了済みであること
+// - 最高入札価格が設定されていること
+//
+// # 戻り値
+// - Price 出品者が受け取る金額
+// - エラー
 func (a *Auction) GetSellerPrice() (*Price, error) {
 	if a.highBidPrice == nil {
 		return nil, NewAuctionError("high bid price is not set")
@@ -144,13 +246,15 @@ func (a *Auction) GetSellerPrice() (*Price, error) {
 	return p, nil
 }
 
-const (
-	BaseShippingFee      = 10
-	CarShippingFee       = 1000
-	LuxuryPriceThreshold = 50000
-	LuxuryTaxRate        = 0.04
-)
-
+// GetBuyerPrice は落札者が支払う金額を取得する関数
+//
+// 落札者が支払う金額を取得する際には、以下のルールに従う必要がある
+// - オークションは終了済みであること
+// - 最高入札価格が設定されていること
+//
+// # 戻り値
+// - Price 落札者が支払う金額
+// - エラー
 func (a *Auction) GetBuyerPrice() (*Price, error) {
 	if a.highBidPrice == nil {
 		return nil, NewAuctionError("high bid price is not set")
