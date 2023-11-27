@@ -46,17 +46,6 @@ type Auction struct {
 	clock         Clock
 }
 
-type Clock interface {
-	Now() *time.Time
-}
-
-type SystemClock struct{}
-
-func (c *SystemClock) Now() *time.Time {
-	now := time.Now()
-	return &now
-}
-
 func (a *Auction) SetClock(clock Clock) {
 	a.clock = clock
 }
@@ -103,7 +92,20 @@ func (a *Auction) GetBuyerId() *UserAccountId {
 
 // clone はオークション集約を複製する関数
 func (a *Auction) clone() (*Auction, error) {
-	return NewAuction(a.id, a.product, a.startDateTime, a.endDateTime, a.startPrice, a.sellerId)
+	return newAuctionWithNoValidation(a.clock, a.id, a.product, a.startDateTime, a.endDateTime, a.startPrice, a.sellerId)
+}
+
+func newAuctionWithNoValidation(clock Clock, id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
+	return &Auction{
+		id:            id,
+		status:        AuctionStatusNotStarted,
+		startDateTime: startDateTime,
+		endDateTime:   endDateTime,
+		product:       product,
+		startPrice:    startPrice,
+		sellerId:      sellerId,
+		clock:         clock,
+	}, nil
 }
 
 // NewAuction はオークション集約を生成する関数
@@ -114,6 +116,7 @@ func (a *Auction) clone() (*Auction, error) {
 // - 開始価格は0より大きいこと
 //
 // # 引数
+// - clock: クロック
 // - id: オークションID
 // - product: 商品
 // - startDateTime: 開始日時
@@ -124,9 +127,9 @@ func (a *Auction) clone() (*Auction, error) {
 // # 戻り値
 // - Auction オークション集約
 // - エラー
-func NewAuction(id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
-	now := time.Now()
-	if startDateTime.Before(now) {
+func NewAuction(clock Clock, id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
+	now := clock.Now()
+	if startDateTime.Before(*now) {
 		return nil, NewAuctionError("start date time must be future")
 	}
 	if endDateTime.Before(*startDateTime) {

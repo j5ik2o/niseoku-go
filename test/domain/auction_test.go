@@ -3,6 +3,7 @@ package domain
 import (
 	"github.com/stretchr/testify/require"
 	"niseoku-go/pkg/domain"
+	"niseoku-go/test"
 	"testing"
 	"time"
 )
@@ -10,16 +11,17 @@ import (
 // オークションを作成できる
 func Test_CreateAuction(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
 
 	// When
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 
 	// Then
 	require.NoError(t, err)
@@ -44,42 +46,36 @@ func Test_CreateAuction(t *testing.T) {
 // 開始時刻が過去の場合は、オークションは作成できない
 func Test_CantCreateAuctionIfStartTimeLessThanNow(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(-1 * time.Hour)
+	startDateTime := clock.Now().Add(-1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
 
 	// When
-	_, err = domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	_, err = domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 
 	// Then
 	require.Error(t, err)
 }
 
-type MockClock struct {
-	now *time.Time
-}
-
-func (c *MockClock) Now() *time.Time {
-	return c.now
-}
-
 // 終了時刻が開始時刻より過去の場合は、オークションは作成できない
 func Test_CantCreateAuctionIfEndTimeLessThanStartTime(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(-1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
 
 	// When
-	_, err = domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	_, err = domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 
 	// Then
 	require.Error(t, err)
@@ -88,14 +84,15 @@ func Test_CantCreateAuctionIfEndTimeLessThanStartTime(t *testing.T) {
 // はじめて入札する
 func Test_StartAuction(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(3 * time.Second)
+	startDateTime := clock.Now().Add(3 * time.Second)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	callback := false
 	setClock(startDateTime, auction)
@@ -114,14 +111,15 @@ func Test_StartAuction(t *testing.T) {
 // 開始時刻前にオークションを開始できない
 func Test_CantStartAuctionBeforeStartTime(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(3 * time.Second)
+	startDateTime := clock.Now().Add(3 * time.Second)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	setClock(startDateTime.Add(-30*time.Second), auction)
 
@@ -137,14 +135,15 @@ func Test_CantStartAuctionBeforeStartTime(t *testing.T) {
 // オークションが開始していない場合は、入札できない
 func Test_CantBidBeforeStartTime(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	setClock(startDateTime, auction)
 
@@ -158,14 +157,15 @@ func Test_CantBidBeforeStartTime(t *testing.T) {
 // 最高額にてオークションに入札する
 func Test_BidHighestAmountInAuction(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
@@ -176,6 +176,7 @@ func Test_BidHighestAmountInAuction(t *testing.T) {
 		callback = true
 	})
 	require.NoError(t, err)
+	require.NotNil(t, auction)
 	require.True(t, callback)
 
 	// When
@@ -188,23 +189,22 @@ func Test_BidHighestAmountInAuction(t *testing.T) {
 }
 
 func setClock(startDateTime time.Time, auction *domain.Auction) {
-	mockClock := MockClock{
-		now: &startDateTime,
-	}
-	auction.SetClock(&mockClock)
+	mockClock := test.NewMockClock(&startDateTime)
+	auction.SetClock(mockClock)
 }
 
 // 最高額より少ない価格では入札できない
 func Test_CantBidWithMinimumAmountLessThanHighestAmount(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(10)
@@ -226,17 +226,24 @@ func Test_CantBidWithMinimumAmountLessThanHighestAmount(t *testing.T) {
 	require.Nil(t, auction.GetHighBidPrice())
 }
 
+func createMockClock() *test.MockClock {
+	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	clock := test.NewMockClock(&now)
+	return clock
+}
+
 // オークションを終了できる_落札者が存在する場合
 func Test_AuctionCanBeClosed_WhenThereAreWinningBidders(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
@@ -265,14 +272,15 @@ func Test_AuctionCanBeClosed_WhenThereAreWinningBidders(t *testing.T) {
 // オークションを終了できる_落札者が不在の場合
 func Test_AuctionCannotBeClosed_WhenThereAreNoWinningBidders(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	callback := false
 	setClock(startDateTime, auction)
@@ -303,14 +311,15 @@ func Test_AuctionCannotBeClosed_WhenThereAreNoWinningBidders(t *testing.T) {
 // 出品者の販売価格を取得する_2パーセントの手数料を引く
 func Test_GetSellingPrice_With2PercentCommissionDeducted(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
@@ -335,14 +344,15 @@ func Test_GetSellingPrice_With2PercentCommissionDeducted(t *testing.T) {
 // 落札者の購入価格を取得する_一般商品には10ドルの配送料を追加する
 func Test_GetSellingPrice_WithRegularItem(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
@@ -367,14 +377,15 @@ func Test_GetSellingPrice_WithRegularItem(t *testing.T) {
 // 落札者の購入価格を取得する_ダウンロードソフトウェア
 func Test_GetSellingPrice_WithDownloadableSoftware(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeDownloadSoftware)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
@@ -399,14 +410,15 @@ func Test_GetSellingPrice_WithDownloadableSoftware(t *testing.T) {
 // 落札者の購入価格を取得する_自動車(1000ドルの送料が追加)
 func Test_GetSellingPrice_WithCar(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeCar)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(2000)
@@ -431,14 +443,15 @@ func Test_GetSellingPrice_WithCar(t *testing.T) {
 // 落札者の購入価格を取得する_5万ドル以上の自動車(4%の贅沢税追加)
 func Test_GetSellingPrice_WithCarOver50K(t *testing.T) {
 	// Given
+	clock := createMockClock()
 	product := createProduct(t, domain.ProductTypeCar)
 	sellerId := domain.GenerateUserAccountId()
-	startDateTime := time.Now().Add(1 * time.Hour)
+	startDateTime := clock.Now().Add(1 * time.Hour)
 	endDateTime := startDateTime.Add(1 * time.Hour)
 	startPrice, err := domain.NewPrice(1000)
 	require.NoError(t, err)
 	auctionId := domain.GenerateAuctionId()
-	auction, err := domain.NewAuction(auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
+	auction, err := domain.NewAuction(clock, auctionId, product, &startDateTime, &endDateTime, startPrice, sellerId)
 	require.NoError(t, err)
 	buyerId := domain.GenerateUserAccountId()
 	highBidPrice, err := domain.NewPrice(50000)
