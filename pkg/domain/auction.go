@@ -108,6 +108,10 @@ func newAuctionWithNoValidation(clock Clock, id *AuctionId, product *Product, st
 	}, nil
 }
 
+var (
+	buyerPriceCalculator = NewShippingFeeCalculator(NewCarShippingFeeCalculator(NewLuxuryCarTaxRateCalculator()))
+)
+
 // NewAuction はオークション集約を生成する関数
 //
 // オークション集約を生成する際には、以下のルールに従う必要がある
@@ -286,6 +290,14 @@ func (a *Auction) GetBuyerPrice() (*Price, error) {
 	if a.highBidPrice == nil {
 		return nil, NewAuctionError("high bid price is not set")
 	}
+	return buyerPriceCalculator.CalculatePrice(a, a.highBidPrice)
+}
+
+/**
+func (a *Auction) GetBuyerPrice() (*Price, error) {
+	if a.highBidPrice == nil {
+		return nil, NewAuctionError("high bid price is not set")
+	}
 	switch a.product.GetProductType() {
 	case ProductTypeGeneric:
 		p, err := NewPrice(BaseShippingFee)
@@ -310,3 +322,4 @@ func (a *Auction) GetBuyerPrice() (*Price, error) {
 		return nil, NewAuctionError("unknown product type")
 	}
 }
+*/
