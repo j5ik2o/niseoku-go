@@ -133,6 +133,9 @@ var (
 // - エラー
 func NewAuction(clock Clock, id *AuctionId, product *Product, startDateTime *time.Time, endDateTime *time.Time, startPrice *Price, sellerId *UserAccountId) (*Auction, error) {
 	now := clock.Now()
+	if !product.IsPublic() {
+		return nil, NewAuctionError("product is private")
+	}
 	if startDateTime.Before(*now) {
 		return nil, NewAuctionError("start date time must be future")
 	}

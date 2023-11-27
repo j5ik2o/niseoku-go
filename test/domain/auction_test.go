@@ -80,7 +80,7 @@ func Test_CantCreateAuctionIfEndTimeLessThanStartTime(t *testing.T) {
 	require.Error(t, err)
 }
 
-// はじめて入札する
+// オークションを開始する
 func Test_StartAuction(t *testing.T) {
 	// Given
 	clock := createMockClock()
@@ -467,7 +467,7 @@ func createProduct(t *testing.T, productType domain.ProductType) *domain.Product
 	productPrice, err := domain.NewProductPrice(100000)
 	require.NoError(t, err)
 	product := domain.NewProduct(productId, productType, productName, productPrice)
-	return product
+	return product.Publish()
 }
 
 func startAndEndDateTime(clock *test.MockClock) (time.Time, time.Time) {
