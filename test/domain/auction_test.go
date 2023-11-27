@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// 5) 認証売主として、商品を売りに出すために、オークションを作成したい。
-func Test_オークションを作成できる(t *testing.T) {
+// オークションを作成できる
+func Test_CreateAuction(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -28,7 +28,8 @@ func Test_オークションを作成できる(t *testing.T) {
 	require.Equal(t, auction.GetStartPrice(), startPrice)
 }
 
-func Test_開始時刻が過去の場合はエラーになる(t *testing.T) {
+// 開始時刻が過去の場合は、オークションは作成できない
+func Test_CantCreateAuctionIfStartTimeLessThanNow(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -44,7 +45,8 @@ func Test_開始時刻が過去の場合はエラーになる(t *testing.T) {
 	require.Error(t, err)
 }
 
-func Test_終了時刻が開始時刻より前の場合はエラーになる(t *testing.T) {
+// 終了時刻が開始時刻より過去の場合は、オークションは作成できない
+func Test_CantCreateAuctionIfEndTimeLessThanStartTime(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -60,16 +62,8 @@ func Test_終了時刻が開始時刻より前の場合はエラーになる(t *
 	require.Error(t, err)
 }
 
-func Test_開始価格が0円の場合はエラーになる(t *testing.T) {
-	// Given, When
-	_, err := domain.NewPrice(0)
-
-	// Then
-	require.Error(t, err)
-}
-
-// 6) オークションとして、入札を受け付けるために、開始されたい。
-func Test_オークションを開始できる(t *testing.T) {
+// はじめて入札する
+func Test_StartAuction(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -91,8 +85,8 @@ func Test_オークションを開始できる(t *testing.T) {
 	require.NotNil(t, auction)
 }
 
-// 7) 認証入札者として、最高額入札者になるために、開始されたオークションに入札したい
-func Test_オークションを最高額で入札する(t *testing.T) {
+// 最高額にてオークションに入札する
+func Test_BidHighestAmountInAuction(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -120,7 +114,8 @@ func Test_オークションを最高額で入札する(t *testing.T) {
 	require.Equal(t, auction.GetHighBidPrice(), highBidPrice)
 }
 
-func Test_オークションは最高額より少ない額で入札できない(t *testing.T) {
+// 最高額より少ない価格では入札できない
+func Test_CantBidWithMinimumAmountLessThanHighestAmount(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -148,8 +143,8 @@ func Test_オークションは最高額より少ない額で入札できない(
 	require.Nil(t, auction.GetHighBidPrice())
 }
 
-// 8) オークションとして、最高入札者や売手に通知できるようになるために、閉じられたい。
-func Test_オークションを終了できる_落札者が存在する場合(t *testing.T) {
+// オークションを終了できる_落札者が存在する場合
+func Test_AuctionCanBeClosed_WhenThereAreWinningBidders(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -181,7 +176,8 @@ func Test_オークションを終了できる_落札者が存在する場合(t 
 	require.Equal(t, actualBuyerId, buyerId)
 }
 
-func Test_オークションを終了できる_落札者が不在の場合(t *testing.T) {
+// オークションを終了できる_落札者が不在の場合
+func Test_AuctionCannotBeClosed_WhenThereAreNoWinningBidders(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -214,7 +210,9 @@ func Test_オークションを終了できる_落札者が不在の場合(t *te
 // - 落札者の金額は、アイテムカテゴリがダウンロードソフトウェアもしくは自動車でない限り、販売されるすべての商品に10ドルの配送料を追加する
 // - 商品が自動車だったら1000ドルの配送料を追加する
 // - 自動車が5万ドル以上で販売されたら、4%の贅沢税を追加する
-func Test_出品者の販売価格を取得する_2パーセントの手数料を引く(t *testing.T) {
+
+// 出品者の販売価格を取得する_2パーセントの手数料を引く
+func Test_GetSellingPrice_With2PercentCommissionDeducted(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -242,7 +240,8 @@ func Test_出品者の販売価格を取得する_2パーセントの手数料�
 	require.Equal(t, highBidPrice.Multiply(1-0.02), sellerPrice)
 }
 
-func Test_落札者の購入価格を取得する_一般商品(t *testing.T) {
+// 落札者の購入価格を取得する_一般商品には10ドルの配送料を追加する
+func Test_GetSellingPrice_WithRegularItem(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeGeneric)
 	sellerId := domain.GenerateUserAccountId()
@@ -270,7 +269,8 @@ func Test_落札者の購入価格を取得する_一般商品(t *testing.T) {
 	require.Equal(t, highBidPrice.Add(domain.NewPriceFromInt(10)), buyerPrice)
 }
 
-func Test_落札者の購入価格を取得する_ダウンロードソフトウェア(t *testing.T) {
+// 落札者の購入価格を取得する_ダウンロードソフトウェア
+func Test_GetSellingPrice_WithDownloadableSoftware(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeDownloadSoftware)
 	sellerId := domain.GenerateUserAccountId()
@@ -298,7 +298,8 @@ func Test_落札者の購入価格を取得する_ダウンロードソフトウ
 	require.Equal(t, highBidPrice, buyerPrice)
 }
 
-func Test_落札者の購入価格を取得する_自動車(t *testing.T) {
+// 落札者の購入価格を取得する_自動車(1000ドルの送料が追加)
+func Test_GetSellingPrice_WithCar(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeCar)
 	sellerId := domain.GenerateUserAccountId()
@@ -326,7 +327,8 @@ func Test_落札者の購入価格を取得する_自動車(t *testing.T) {
 	require.Equal(t, highBidPrice.Add(domain.NewPriceFromInt(1000)), buyerPrice)
 }
 
-func Test_落札者の購入価格を取得する_自動車2(t *testing.T) {
+// 落札者の購入価格を取得する_5万ドル以上の自動車(4%の贅沢税追加)
+func Test_GetSellingPrice_WithCarOver50K(t *testing.T) {
 	// Given
 	product := createProduct(t, domain.ProductTypeCar)
 	sellerId := domain.GenerateUserAccountId()

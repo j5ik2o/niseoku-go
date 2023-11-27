@@ -6,7 +6,8 @@ import (
 	"testing"
 )
 
-func Test_ユーザアカウントを作成できる(t *testing.T) {
+// ユーザアカウントを作成できる
+func Test_CreateUserAccount(t *testing.T) {
 	// Given
 	userAccountId := domain.GenerateUserAccountId()
 	firstName := "Junichi"

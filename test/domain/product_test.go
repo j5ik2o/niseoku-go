@@ -6,7 +6,8 @@ import (
 	"testing"
 )
 
-func Test_商品を作成できる(t *testing.T) {
+// 商品を作成できる
+func Test_CreateProduct(t *testing.T) {
 	// Given
 	productId := domain.GenerateProductId()
 	productType := domain.ProductTypeGeneric
@@ -25,7 +26,8 @@ func Test_商品を作成できる(t *testing.T) {
 	require.Equal(t, product.GetPrice(), productPrice)
 }
 
-func Test_商品を公開できる(t *testing.T) {
+// 商品を公開できる
+func Test_PublishAuction(t *testing.T) {
 	// Given
 	productId := domain.GenerateProductId()
 	productType := domain.ProductTypeGeneric

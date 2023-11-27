@@ -8,7 +8,8 @@ import (
 	"testing"
 )
 
-func Test_未ログインユーザがログインできる(t *testing.T) {
+// 未ログインユーザがログインできる
+func Test_NonLoggedInUserCanLogin(t *testing.T) {
 	// Given
 	userAccountRepository := memory2.NewUserAccountRepositoryInMemory()
 	sessionRepository := memory2.NewSessionRepositoryInMemory()
@@ -29,7 +30,8 @@ func Test_未ログインユーザがログインできる(t *testing.T) {
 	require.NotNil(t, session)
 }
 
-func Test_ログイン済みユーザがログアウトできる(t *testing.T) {
+// ログイン済みユーザがログアウトできる
+func Test_LoggedInUserCanLogout(t *testing.T) {
 	// Given
 	userAccountRepository := memory2.NewUserAccountRepositoryInMemory()
 	sessionRepository := memory2.NewSessionRepositoryInMemory()

@@ -7,7 +7,8 @@ import (
 	"testing"
 )
 
-func Test_商品を登録できる(t *testing.T) {
+// 商品を登録できる
+func Test_RegisterProduct(t *testing.T) {
 	// Given
 	productId := domain.GenerateProductId()
 	productType := domain.ProductTypeGeneric

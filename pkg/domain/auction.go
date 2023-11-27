@@ -11,16 +11,23 @@ type EventHandler func(auction *Auction)
 type AuctionStatus int
 
 const (
+	// AuctionStatusNotStarted は未開始を表します。
 	AuctionStatusNotStarted AuctionStatus = iota
+	// AuctionStatusStarted は開始済みを表します。
 	AuctionStatusStarted
+	// AuctionStatusClosed は終了済みを表します。
 	AuctionStatusClosed
 )
 
 const (
-	BaseShippingFee      = 10
-	CarShippingFee       = 1000
-	LuxuryPriceThreshold = 50000
-	LuxuryTaxRate        = 0.04
+	// BaseShippingFee は基本送料を表します。
+	BaseShippingFee = 10
+	// CarShippingFee は車の送料を表します。
+	CarShippingFee = 1000
+	// LuxuryCarPriceThreshold は高級車の価格閾値を表します。
+	LuxuryCarPriceThreshold = 50000
+	// LuxuryTaxRate は贅沢品の税率を表します。
+	LuxuryTaxRate = 0.04
 )
 
 // Auction はオークション集約を表します。
@@ -274,7 +281,7 @@ func (a *Auction) GetBuyerPrice() (*Price, error) {
 			return nil, err
 		}
 		buyerPrice := a.highBidPrice.Add(p)
-		if a.highBidPrice.IsGreaterThanOrEqualTo(&Price{LuxuryPriceThreshold}) {
+		if a.highBidPrice.IsGreaterThanOrEqualTo(&Price{LuxuryCarPriceThreshold}) {
 			return buyerPrice.Add(a.highBidPrice.Multiply(LuxuryTaxRate)), nil
 		} else {
 			return buyerPrice, nil
