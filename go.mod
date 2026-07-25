@@ -3,7 +3,7 @@ module niseoku-go
 go 1.20
 
 require (
-	github.com/oklog/ulid/v2 v2.1.0
+	github.com/oklog/ulid/v2 v2.1.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 )
